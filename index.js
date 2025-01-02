@@ -1,162 +1,74 @@
-// import express from "express";
-// import bodyParser from "body-parser";
-// import pg from "pg";
-
-
-// const app = express();
-// const port = 3000;
-
-// const db = new pg.Client({
-//   user:"postgres",
-//   host:"localhost",
-//   database:"permalist",
-//   password:"data1",
-//   port:5432
-// })
-// db.connect()
-
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(express.static("public"));
-
-// let items = [
-//   { id: 1, title: "Buy milk" },
-//   { id: 2, title: "Finish homework" },
-// ];
-
-// app.get("/", async (req, res) => {
-//   try{
-//     const result = await db.query('SELECT * FROM items ORDER BY id ASC');
-//     items= result.rows;
-//     res.render("index.ejs", {
-//       listTitle: "TO DO",
-//       listItems: items,
-//     });
-
-//   }catch(err){
-//     console.log(err)
-//   }
- 
-// });
-
-// app.post("/add", async (req, res) => {
-  
-//   try{
-//     const item = req.body.newItem;
-
-//     await db.query("INSERT INTO items(title)VALUES($1)", [item]);
-
-
-//     items.push({ title: item });
-//     res.redirect("/");
-//   }catch(err){
-//     console.log(err)
-//   }
-// });
-
-// app.post("/edit",async (req, res) => {
-  
-
-//   try{
-//     const item = req.body.updatedItemTitle;
-//   const id = req.body.updatedItemId;
-   
-//     await db.query("UPDATE items SET title = ($1) WHERE id = $2", [item, id]);
-//     res.redirect("/");
-//   }catch(err){
-//     console.log(err)
-//   }
-
-
-// });
-
-// app.post("/delete", async(req, res) => {
-//   try{
-//     const id = req.body.deleteItemId;
-//     await db.query("DELETE FROM items WHERE id =$1",[id]);
-//     res.redirect("/");
-//   }catch(err){
-//     console.log(err);
-//   }
-
-
-// });
-
-// app.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
-import dotenv from "dotenv";
-import cors from "cors";
 
-dotenv.config(); 
 
 const app = express();
+const port = 3000;
 
 const db = new pg.Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+  user:"postgres",
+  host:"localhost",
+  database:"permalist",
+  password:"data1",
+  port:5432
+})
+db.connect();
 
-
-db.connect()
-  .then(() => console.log("Connected to the database!"))
-  .catch((err) => console.error("Database connection error:", err));
-
-  app.use(cors({ origin: "*" })); 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public")); 
+app.use(express.static("public"));
 
+let items = [
+  { id: 1, title: "Buy milk" },
+  { id: 2, title: "Finish homework" },
+];
 
 app.get("/", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM items ORDER BY id ASC");
-    res.status(200).json(result.rows);
+    items = result.rows;
+
+    res.render("index.ejs", {
+      listTitle: "To Do",
+      listItems: items,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching items.");
+    console.log(err);
   }
 });
 
 app.post("/add", async (req, res) => {
+  const item = req.body.newItem;
+  
   try {
-    const item = req.body.newItem;
-    await db.query("INSERT INTO items(title) VALUES($1)", [item]);
-    res.status(201).send("Item added successfully!");
+    await db.query("INSERT INTO items (title) VALUES ($1)", [item]);
+    res.redirect("/");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error adding item.");
+    console.log(err);
   }
 });
 
 app.post("/edit", async (req, res) => {
+  const item = req.body.updatedItemTitle;
+  const id = req.body.updatedItemId;
+
   try {
-    const { updatedItemTitle, updatedItemId } = req.body;
-    await db.query("UPDATE items SET title = $1 WHERE id = $2", [updatedItemTitle, updatedItemId]);
-    res.status(200).send("Item updated successfully!");
+    await db.query("UPDATE items SET title = ($1) WHERE id = $2", [item, id]);
+    res.redirect("/");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error updating item.");
+    console.log(err);
   }
 });
 
 app.post("/delete", async (req, res) => {
+  const id = req.body.deleteItemId;
   try {
-    const id = req.body.deleteItemId;
     await db.query("DELETE FROM items WHERE id = $1", [id]);
-    res.status(200).send("Item deleted successfully!");
+    res.redirect("/");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error deleting item.");
+    console.log(err);
   }
 });
-
-
-const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
